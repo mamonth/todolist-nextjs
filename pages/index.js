@@ -3,9 +3,24 @@ import { MongoClient } from "mongodb";
 import { useRouter } from "next/router";
 export default function Home(props) {
   const router = useRouter();
-  const [tasksArray, setTaskDB] = useState(props.tasks);
+  const [tasksArray, setTasksArray] = useState(props.tasks);
   const [task, setTask] = useState("");
-  useEffect(() => {}, [tasksArray]);
+  //useEffect(() => {}, [tasksArray]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/getTasks"); // Create an API endpoint to fetch tasks
+        if (response.ok) {
+          const data = await response.json();
+          setTasksArray(data);
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   async function deleteIt(item) {
     console.log("delete task with id: ", item.id);
@@ -14,6 +29,8 @@ export default function Home(props) {
       const response = await fetch(`/api/delete?id=${id}`, {
         method: "DELETE",
       });
+      const updatedArray = tasksArray.filter((task) => task.id !== id);
+      setTasksArray(updatedArray);
     } catch (error) {
       console.log(error);
     }
@@ -31,15 +48,22 @@ export default function Home(props) {
     const data = await response.json();
     console.log("this is the response from api/task", data);
 
+    console.log("");
     //router.push("/");
+    const updatedTaskArray = [...tasksArray, data.data];
+    console.log("Updated task array:", updatedTaskArray);
+    setTasksArray(updatedTaskArray);
+    setTask("");
   }
 
   function submitHandler(event) {
     event.preventDefault();
     console.log("task from handler", task);
     //
-    sendItToDb(task);
-    setTask("");
+    if (task.trim() !== "") {
+      sendItToDb(task);
+      setTask("");
+    }
   }
   return (
     <>
@@ -55,7 +79,10 @@ export default function Home(props) {
                 name="task"
                 id="task"
                 value={task}
-                onChange={(e) => setTask(e.target.value)}
+                onChange={(e) => {
+                  setTask(e.target.value);
+                  console.log("Updated task:", e.target.value);
+                }}
               />
               <button
                 type="submit"
@@ -69,9 +96,9 @@ export default function Home(props) {
       </div>
       <div>
         <ul className="divide-y divide-gray-300">
-          {tasksArray.map((item) => (
+          {tasksArray.map((item, key) => (
             <li
-              key={item.id}
+              key={key}
               className="flex items-center justify-between py-2 pl-4 pr-1"
             >
               <p className="text-lg">{item.task}</p>
@@ -93,25 +120,6 @@ export default function Home(props) {
     </>
   );
 }
-
-// export async function getStaticProps() {
-//   const client = await MongoClient.connect(
-//     "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-//   );
-//   const db = client.db();
-//   const taskCollection = db.collection("task");
-//   const tasksDB = await taskCollection.find({}).toArray();
-//   console.log(tasksDB);
-//   client.close();
-//   return {
-//     props: {
-//       tasks: tasksDB.map((task) => ({
-//         task,
-//         id: task._id.toString(),
-//       })),
-//     },
-//   };
-// }
 
 export async function getStaticProps() {
   try {
