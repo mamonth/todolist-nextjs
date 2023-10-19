@@ -23,7 +23,6 @@ export default function Home(props) {
   }, []);
 
   async function deleteIt(item) {
-    console.log("delete task with id: ", item.id);
     const id = item.id;
     try {
       const response = await fetch(`/api/delete?id=${id}`, {
@@ -34,31 +33,24 @@ export default function Home(props) {
     } catch (error) {
       console.log(error);
     }
-    router.push("/");
   }
 
   async function sendItToDb() {
     const response = await fetch("/api/task", {
       method: "POST",
-      body: JSON.stringify({ task }),
+      body: JSON.stringify({ task }), //whats that???
       headers: {
         "Content-Type": "application/json",
       },
     });
     const data = await response.json();
-    console.log("this is the response from api/task", data);
-
-    console.log("");
-    //router.push("/");
     const updatedTaskArray = [...tasksArray, data.data];
-    console.log("Updated task array:", updatedTaskArray);
     setTasksArray(updatedTaskArray);
     setTask("");
   }
 
   function submitHandler(event) {
     event.preventDefault();
-    console.log("task from handler", task);
     //
     if (task.trim() !== "") {
       sendItToDb(task);
@@ -81,7 +73,6 @@ export default function Home(props) {
                 value={task}
                 onChange={(e) => {
                   setTask(e.target.value);
-                  console.log("Updated task:", e.target.value);
                 }}
               />
               <button

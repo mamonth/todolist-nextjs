@@ -1,26 +1,9 @@
-// import { MongoClient } from "mongodb";
-
-// export default async function handler(req, res) {
-//   if (req.method === "POST") {
-//     const data = req.body;
-//     console.log("this is the sent task", data);
-//     const client = await MongoClient.connect(
-//       "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-//     );
-//     const db = client.db();
-//     const taskCollection = db.collection("task");
-//     const result = await taskCollection.insertOne(data);
-//     console.log("this is the result of inserting task", result);
-//     res.status(201).json({ message: "task inserted", data });
-//   }
-// }
-
 import { MongoClient } from "mongodb";
 
 export default async function handler(req, res) {
   let client;
   if (req.method === "POST") {
-    const data = req.body;
+    let data = req.body;
     console.log("this is the sent task", data);
     try {
       client = await MongoClient.connect(
@@ -31,7 +14,10 @@ export default async function handler(req, res) {
 
       const result = await taskCollection.insertOne(data);
       console.log("this is the result of inserting task", result);
-      res.status(201).json({ message: "Task inserted", data });
+      res.status(201).json({
+        message: "Task inserted",
+        data: { task: data.task, id: data._id.toString() },
+      });
     } catch (error) {
       console.error("Error while inserting task:", error);
       res
