@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { MongoClient } from "mongodb";
-import { useRouter } from "next/router";
 export default function Home(props) {
-  const router = useRouter();
+  const [editedTask, setEditedTask] = useState("");
+  const [selectedItemId, setSelectedItemId] = useState("");
   const [tasksArray, setTasksArray] = useState(props.tasks);
   const [task, setTask] = useState("");
-  //useEffect(() => {}, [tasksArray]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -14,6 +14,10 @@ export default function Home(props) {
           const data = await response.json();
           setTasksArray(data);
         }
+        console.log(
+          "this is taskArray coming as response from backend",
+          tasksArray
+        );
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
@@ -38,7 +42,7 @@ export default function Home(props) {
   async function sendItToDb() {
     const response = await fetch("/api/task", {
       method: "POST",
-      body: JSON.stringify({ task }), //whats that???
+      body: JSON.stringify({ task }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -47,6 +51,40 @@ export default function Home(props) {
     const updatedTaskArray = [...tasksArray, data.data];
     setTasksArray(updatedTaskArray);
     setTask("");
+  }
+
+  async function editIt(item) {
+    console.log("this is from editIt", item);
+    setEditedTask(item);
+    setSelectedItemId(item.id);
+  }
+
+  async function saveIt(item) {
+    try {
+      console.log("this item is from saveIt", item);
+
+      console.log("edited Task", editedTask);
+      const response = await fetch(`/api/save?id=${item.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ _id: editedTask.id, task: editedTask.task }),
+      });
+      const data = await response.json();
+      console.log("this is the response from db after saveIt", data);
+      const newArray = tasksArray.map((item) =>
+        item.id === data.data.id ? (item = data.data) : item
+      );
+
+      setTasksArray(newArray);
+      console.log("trying my best", tasksArray, data.data);
+
+      if (response.ok) {
+        setSelectedItemId(""); // Reset selectedItemId to exit edit mode
+      } else {
+        console.error("Error saving task:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving task:", error);
+    }
   }
 
   function submitHandler(event) {
@@ -77,7 +115,7 @@ export default function Home(props) {
               />
               <button
                 type="submit"
-                className="w-1/3 bg-blue-500 text-white rounded-r p-2 hover:bg-blue-600"
+                className="w-1/3 bg-blue-500 text-white rounded-r p-2 hover:bg-blue-600 rounded-lg"
               >
                 Add
               </button>
@@ -92,13 +130,41 @@ export default function Home(props) {
               key={key}
               className="flex items-center justify-between py-2 pl-4 pr-1"
             >
-              <p className="text-lg">{item.task}</p>
+              {selectedItemId === item.id ? (
+                <input
+                  type="text"
+                  className="w-2/3 p-2 rounded-l border border-gray-300"
+                  name="edit-task"
+                  id="edit-task"
+                  // value={editedTask === "" ? item.task : editedTask}
+                  value={editedTask.task || ""}
+                  onChange={(e) =>
+                    setEditedTask({ ...editedTask, task: e.target.value })
+                  }
+                  //onChange={(e) => console.log(e.target.value)}
+                />
+              ) : (
+                <p className="text-lg">{item.task}</p>
+              )}
+
               <div className="space-x-2">
-                <button className="p-2 bg-blue-500 text-white hover:bg-blue-600">
-                  Edit
-                </button>
+                {selectedItemId === item.id ? (
+                  <button
+                    className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
+                    onClick={() => saveIt(item)}
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <button
+                    className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg"
+                    onClick={() => editIt(item)}
+                  >
+                    Edit
+                  </button>
+                )}
                 <button
-                  className="p-2 bg-red-500 text-white hover:bg-red-600"
+                  className="p-2 bg-red-500 text-white hover:bg-red-600 rounded-lg"
                   onClick={() => deleteIt(item)}
                 >
                   Delete

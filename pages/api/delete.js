@@ -3,7 +3,6 @@ import { MongoClient, ObjectId } from "mongodb";
 export default async function handler(req, res) {
   let client;
   if (req.method === "DELETE") {
-    const data = req.query;
     const { id } = req.query;
 
     try {
