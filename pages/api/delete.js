@@ -1,4 +1,5 @@
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
+import {DB} from '@/libs/DB';
 
 export default async function handler(req, res) {
   let client;
@@ -6,10 +7,7 @@ export default async function handler(req, res) {
     const { id } = req.query;
 
     try {
-      client = await MongoClient.connect(
-        "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-      );
-      const db = client.db();
+      const db = await DB.connect();
       const collection = db.collection("task");
 
       const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -22,8 +20,6 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error("Error while finding document:", error);
       res.status(500).json({ message: "Internal server error" }); // Handle the error and return an appropriate response
-    } finally {
-      client.close();
     }
   } else {
     res.status(405).end(); // Method Not Allowed

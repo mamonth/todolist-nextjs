@@ -1,4 +1,5 @@
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
+import {DB} from '@/libs/DB';
 
 export default async function handler(req, res) {
   if (req.method !== "PUT") {
@@ -12,10 +13,7 @@ export default async function handler(req, res) {
   console.log("this is id and task", id, task);
   let client;
   try {
-    client = await MongoClient.connect(
-      "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-    );
-    const db = client.db();
+    const db = await DB.connect();
     const taskCollection = db.collection("task");
 
     const updatedTask = {
@@ -27,8 +25,6 @@ export default async function handler(req, res) {
       { _id: new ObjectId(id) },
       { $set: updatedTask }
     );
-
-    client.close();
 
     res.status(200).json({
       message: "Task updated successfully",

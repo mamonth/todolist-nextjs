@@ -1,15 +1,11 @@
-import { MongoClient } from "mongodb";
+import {DB} from '@/libs/DB';
 
 export default async (req, res) => {
   if (req.method === "GET") {
     try {
-      const client = await MongoClient.connect(
-        "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-      );
-      const db = client.db();
+      const db = await DB.connect();
       const taskCollection = db.collection("task");
       const tasksDB = await taskCollection.find({}).toArray();
-      client.close();
 
       const tasks = tasksDB.map((task) => ({
         task: task.task,
