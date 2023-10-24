@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MongoClient } from "mongodb";
+
 export default function Home(props) {
   const [editedTask, setEditedTask] = useState("");
   const [selectedItemId, setSelectedItemId] = useState("");
@@ -179,14 +179,12 @@ export default function Home(props) {
 }
 
 export async function getStaticProps() {
+  const {DB} = await import( '@/libs/DB' )
+
   try {
-    const client = await MongoClient.connect(
-      "mongodb+srv://admin:pass@cluster0.fh4xile.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-    );
-    const db = client.db();
+    const db = await DB.connect();
     const taskCollection = db.collection("task");
     const tasksDB = await taskCollection.find({}).toArray();
-    client.close();
 
     const tasks = tasksDB.map((task) => ({
       task: task.task,
@@ -207,3 +205,22 @@ export async function getStaticProps() {
     };
   }
 }
+
+[
+  "SIGHUP",
+  "SIGINT",
+  "SIGQUIT",
+  "SIGILL",
+  "SIGTRAP",
+  "SIGABRT",
+  "SIGBUS",
+  "SIGFPE",
+  "SIGUSR1",
+  "SIGSEGV",
+  "SIGUSR2",
+  "SIGTERM",
+].forEach(function (sig) {
+  process.on(sig, function () {
+    DB.closeConnection();
+  });
+});
